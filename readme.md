@@ -1,2 +1,2 @@
 # Description
-Some use utility functions and functionality for development ease.
+Some useful utility functions and functionality for development ease.
