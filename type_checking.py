@@ -183,3 +183,49 @@ def io_types(
             return fn(*args, **kwargs)
         return do_checks
     return decorator
+
+def returns(return_types):
+    ''' A decorator factory function that does type checking if used
+    as a decorator on a function.
+    
+    Usage:
+    @returns(int)
+    def func(a, c, *args, **kwargs):
+        ...
+    '''
+    def decorator(fn):
+        @wraps(fn)
+        def do_checks(*args, **kwargs):
+            return_values = fn(*args, **kwargs)
+
+            # First check if the encapsulating types agree
+            if not isinstance(return_types, type(return_values)):
+                raise Exception("")
+            
+            # If return type is a tuple of types
+            if isinstance(return_types, tuple):
+                n_types = len(return_types)
+                n_values = len(return_values)
+                s = lambda n: 's' if n != 1 else ''
+                if n_types != n_values:
+                    raise Exception(
+                        f"Return type with {n_types} type{s(n_types)} given but " +
+                        f"{fn.__name__} returns {n_values} value{s(n_values)}."
+                    )
+                actual_return_types = tuple(map(type, return_values))
+                for pos, (ret_type, act_type) in enumerate(
+                    zip(return_types, actual_return_types)
+                ):
+                    if act_type is not ret_type:
+                        raise Exception(
+                            f"Return type of {ret_type} required in " +
+                            f"position {pos} but type of {act_type} returned."
+                        )
+            
+            # If return type is a dict of types
+            if isinstance(return_types, dict):
+                pass
+            return fn
+        return do_checks
+    return decorator
+    
