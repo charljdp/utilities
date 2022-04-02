@@ -1,8 +1,25 @@
 import inspect
 from functools import wraps
-from collections import OrderedDict
+from copy import deepcopy
+from typing import OrderedDict
 
-def parameter_types(*pos_types, **kw_types):
+# def _add_to_error_msg(
+#     error_msg,
+#     type_passed,
+#     type_expected,
+#     param_kind,
+#     param_name,
+#     param_position
+# ):
+#     "Argument of {type_passed} passed, {type_expected} expected."
+#     return error_msg
+
+
+
+def io_types( 
+    *arg_types,
+    **kwarg_types
+):
     ''' A decorator factory function that does type checking if used
     as a decorator on a function.
     
@@ -12,77 +29,157 @@ def parameter_types(*pos_types, **kw_types):
     )
     def func(a, c, *args, **kwargs):
         ...
+    
+    p, *a
+    p, *a, **k
+    p, **k
+    *a, **k
+    **k
+    *a
+    p
     '''
     def decorator(func):
         
         @wraps(func)
         def do_checks(*args, **kwargs):
+            
             error_str = lambda type_passed, type_expected: (
                 f"Argument of {type_passed} passed, {type_expected} expected." 
             )
-            err_dict = {
-                'other': {},
-                'args': {},
-                'kwargs': {}
-            }
-            other_pos_types = []
-            var_kw_types = []
-            var_pos_types = []
-            var_pos_types_done = False
-            for _type in pos_types:
-                if isinstance(_type, tuple):
-                    if var_pos_types_done:
-                        raise Exception(
-                            "Cannot have more than one " +
-                            "*args tuple specified in parameter_types."
-                        )
-                    var_pos_types_done = True
-                    var_pos_types = [t for t in _type]
-                    continue
-                other_pos_types.append(_type)
             
-            if len(kw_types) != len(kwargs):
+            if len(kwarg_types) != len(kwargs):
                 raise Exception(
-                    f"The number of keyword arguments passed is {len(kwargs)}, " +
-                    f"but the number of types specified is {len(kw_types)}."
+                    "Number of keyword argument types given "
+                    "and number of keyword arguments passed "
+                    "must be the same."
                 )
 
-            for param_name, param_value in kwargs.items():
-                if var_kw_types[param_name] != type(param_value):
-                    err_dict['kwargs'][param_name] = error_str(
-                        type(param_value), var_kw_types[param_name]
-                    )
+            # Vanilla cases 
+            arg_pos = 0
+            for arg_type in arg_types:
+                if isinstance(arg_type, tuple):
+                    for var_arg_type in arg_type:
+                        arg = args[arg_pos]
+                        if not isinstance(arg, var_arg_type):
+                            # Log/build error
+                            pass
+                        arg_pos += 1
+                else:
+                    arg = args[arg_pos]
+                    if not isinstance(arg, arg_type):
+                        # Log/build error
+                        pass
+                    arg_pos += 1
             
-            if n_pos_types != n_args:
-                raise Exception(
-                    f"The number of non-keyword arguments passed is {n_args}, " +
-                    f"but the number of types specified is {n_pos_types}."
-                )
+            for kwarg_type in kwarg_types:
+                pass
+
+
+            n_args_to_inspect = len(args) + len(kwargs)
+            if n_types_specified > n_args_to_inspect:
+                raise Exception("More types specified than passed arguments.")
+            if n_types_specified < n_args_to_inspect:
+                raise Exception("Less types specified than passed arguments.")
+
+            # result = OrderedDict()
+            # for _type in arg_types:
+            #     if isinstance(_type, tuple):
+            #         key = 'VAR_POSITIONAL'
+            #     else:
+            #         key = 'POSITIONAL'
+            #     result[key] = _type
+            # for _type in kwarg_types:
+            #     result['KEYWORD'] = _type
+
+            # arg_param_type_compare = {}
+            # args_and_types = zip(arg_types, args)
+
+            n_types_specified = len(kwarg_types)
+            for arg_type in arg_types:
+                if isinstance(arg_type, tuple):
+                    n_types_specified += len(arg_type)
+                else:
+                    n_types_specified += 1
+            
+            {
+                ''
+            }
+                    
+
 
             for param in inspect.signature(func).parameters.values():
+                if param.kind ==
+                if param.kind == param.POSITIONAL_ONLY:
+                    arg_param_type_compare[param.name] = 
+
+
+            positional_params = [
+                param.name 
+                for param in inspect.signature(func).parameters.values()
+                if param.kind == param.POSITIONAL_ONLY
+            ]
+            var_positional_params = [
+                param.name 
+                for param in inspect.signature(func).parameters.values()
+                if param.kind == param.VAR_POSITIONAL
+            ]
+            position = 0
+            for _type in arg_types:
+                if isinstance(_type, tuple):  
+                    # Then we are dealing with var_positional arguments
+                    for t in _type:
+                        if isinstance()
+                else:
+                    # Then we are dealing with positional arguments
+
+
+
+                
+            for _type in kwarg_types:
+                pass
+
+            error_msg = ""
+            args_index = 0
+            kwargs_index = 0
+            largs = deepcopy(args)
+            lkwargs = deepcopy(kwargs)
+            for param in inspect.signature(func).parameters.values():
+                
+                if param.kind == param.POSITIONAL_ONLY:
+                    if not isinstance(largs[args_index], arg_types[args_index]):
+                        error_msg += (
+                            
+                            f"For parameter {param.name}." + error_str(
+                                type(kwarg), var_kw_types[param_name]
+                            )
+                        )
+                    args_index += 1
+                
+                if param.kind == param.POSITIONAL_OR_KEYWORD:
+                    if param.name in lkwargs
+                    if not isinstance(largs[args_index]):
+
+                    args_index += 1
                 
                 if param.kind == param.VAR_POSITIONAL:
                     pass
                 
+                if param.kind == param.KEYWORD_ONLY:
+                    kwargs_index += 1
                 if param.kind == param.VAR_KEYWORD:
+                    kwargs_index += 1
 
-
-            err_dict = dict()
-            for i, (_arg, _type) in enumerate(zip(args, types)):
-                if not isinstance(_arg, _type):
-                    err_dict[i] = (type(_arg), _type)
-
-                raise Exception(
-                    f"The {arg_position(i)} argument is {type(_arg)}. " +
-                    f"Must be {_type}."
-                )                    
+                if param.kind == param.VAR_POSITIONAL:
+                    for _type in var_pos_types:
+                        if not isinstance(, _type):
+                            err_dict['kwargs'][param_name] = error_str(
+                                type(kwarg), var_kw_types[param_name]
+                            )
+                elif param.kind not in (param.VAR_KEYWORD, param.KEYWORD_ONLY):
+                    pass
+            if returns:
+                if isinstance(returns, )
+            if isinstance(func(*args, **kwargs)
             return fn(*args, **kwargs)
         return do_checks
     return decorator
-
-
-@parameter_types(int, list)
-def do_something(a, b):
-    return str(a) + b
-
-print(do_something('3', '4'))
